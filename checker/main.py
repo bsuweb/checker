@@ -5,28 +5,25 @@ import subprocess
 import getopt
 
 
-class Chdir:
-    def __init__(self, newPath):
-        self.savedPath = os.getcwd()
-        os.chdir(newPath)
-
-
 class Checker:
+
     def __init__(self, path):
-        self.path = path
+        if not os.path.isdir(path):
+            sys.exit(1);
+        self.path = os.path.realpath(path)
+        self.jobs = self.getExecutableFiles(self.path)
 
-    def get_jobs(self):
-        Chdir(self.path)
-        jobs = []
-        for dirname, dirnames, filenames in os.walk('.'):
+    def getExecutableFiles(self,path):
+        files = []
+        for dirname, dirnames, filenames in os.walk(path):
             for filename in filenames:
-                i = os.path.join(dirname, filename)
-                if i != "./__init__.py":
-                    jobs.append(self.path + i[2:])
-        self.run_jobs(jobs)
+                filename_path = os.path.join(dirname, filename)
+                if os.access(filename_path,os.X_OK):
+                    files.append(filename_path)
+        return files;
 
-    def run_jobs(self, jobs):
-        for job in jobs:
+    def run(self):
+        for job in self.jobs:
             subprocess.call(job)
 
 
@@ -37,4 +34,4 @@ if __name__ == '__main__':
             print './main.py /full/path/to/jobs'
             sys.exit()
     check = Checker(path)
-    check.get_jobs()
+    check.run()
