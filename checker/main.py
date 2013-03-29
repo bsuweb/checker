@@ -1,12 +1,8 @@
 #!/usr/bin/env python
-import os
-import sys
-import subprocess
-import argparse
+import os, sys, subprocess, argparse
 
 
 class Checker:
-
     def __init__(self, path):
         if not os.path.isdir(path):
             sys.exit(1);
