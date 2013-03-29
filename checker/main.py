@@ -2,7 +2,7 @@
 import os
 import sys
 import subprocess
-import getopt
+import argparse
 
 
 class Checker:
@@ -28,10 +28,13 @@ class Checker:
 
 
 if __name__ == '__main__':
-    opts, path = getopt.getopt(sys.argv[1], "h")
-    for opt, arg in opts:
-        if opt == '-h':
-            print './main.py /full/path/to/jobs'
-            sys.exit()
-    check = Checker(path)
+    # Add CLI parsing.
+    parser = argparse.ArgumentParser(
+        description = "A script that runs all the jobs in the given directory and keeps track of responses in an sqlite database.")
+    parser.add_argument('path', metavar='jobs-directory', type=str, nargs=1,
+                   help='Path to the directory where executable jobs are.')
+    args = parser.parse_args()
+
+    # Initialize and run the checker.
+    check = Checker(args.path[0])
     check.run()
