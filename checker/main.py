@@ -21,20 +21,20 @@ class Checker:
         for dirname, dirnames, filenames in os.walk('.'):
             for filename in filenames:
                 i = os.path.join(dirname, filename)
-                if i.lower().endswith('.py') and i != "./__init__.py":
+                if i != "./__init__.py":
                     jobs.append(self.path + i[2:])
         self.run_jobs(jobs)
 
     def run_jobs(self, jobs):
         for job in jobs:
-            subprocess.check_call(["python", job])
+            subprocess.call(job)
 
 
 if __name__ == '__main__':
     opts, path = getopt.getopt(sys.argv[1], "h")
     for opt, arg in opts:
         if opt == '-h':
-            print 'help information'
+            print './main.py /full/path/to/jobs'
             sys.exit()
     check = Checker(path)
     check.get_jobs()
