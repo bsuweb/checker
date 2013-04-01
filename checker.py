@@ -29,8 +29,8 @@ class Checker:
 if __name__ == '__main__':
     # Add CLI parsing.
     parser = argparse.ArgumentParser(
-        description="""A script that runs all the jobs in the given directory
-                    and keeps track of responses in an sqlite database.""")
+        description="A script that runs all the jobs in the given directory"
+                    " and keeps track of responses in an sqlite database.")
     parser.add_argument('path', metavar='jobs-directory', type=str, nargs=1,
                         help='Path to the directory where executable jobs are.')
     args = parser.parse_args()
