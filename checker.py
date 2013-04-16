@@ -1,30 +1,39 @@
 #!/usr/bin/env python
-import os
+from os import walk, X_OK, access
+from os.path import basename, splitext, isdir, realpath, join
 import sys
 import subprocess
 import argparse
+import create_table
 
 
 class Checker:
     def __init__(self, path):
-        if not os.path.isdir(path):
+        if not isdir(path):
             sys.exit(1)
-        self.path = os.path.realpath(path)
+        self.path = realpath(path)
         self.jobs = self.getExecutableFiles(self.path)
 
     def getExecutableFiles(self, path):
         files = []
-        for dirname, dirnames, filenames in os.walk(path):
+        for dirname, dirnames, filenames in walk(path):
             for filename in filenames:
-                filename_path = os.path.join(dirname, filename)
-                if os.access(filename_path, os.X_OK):
+                filename_path = join(dirname, filename)
+                if access(filename_path, X_OK):
                     files.append(filename_path)
         return files
 
     def run(self):
         for job in self.jobs:
             subprocess.call(job)
-
+            # Create database checker_log.sqlite if it doesn't exist
+            db = create_table.CreateTable('checker_log.sqlite')
+            # Create job table if it doesn't exist
+            db.make(basename(splitext(job)[0]),
+                    ' (datetime text, exit_code integer, value text)')
+            # Insert values into table
+            db.insert_values(basename(splitext(job)[0]),
+                             """('2013-04-15',0,'value')""")
 
 if __name__ == '__main__':
     # Add CLI parsing.
