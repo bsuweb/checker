@@ -40,7 +40,7 @@ class Checker:
                     ' (datetime text, exit_code integer, value text)')
             # Insert values into table
             db.insert_values(basename(splitext(job)[0]),
-                             "('"+str(now)+"',"+str(retcode)+",'value')")
+                             "('"+str(now)+"',"+str(retcode)+",'"+output[0]+"')")
 
 if __name__ == '__main__':
     # Add CLI parsing.
