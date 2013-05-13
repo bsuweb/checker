@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from os import walk, X_OK, access
 from os.path import basename, splitext, isdir, realpath, join
+import datetime
 import sys
 import subprocess
 import argparse
@@ -25,7 +26,13 @@ class Checker:
 
     def run(self):
         for job in self.jobs:
-            subprocess.call(job)
+            now = datetime.datetime.now()
+            process = subprocess.Popen(job, stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
+                                       universal_newlines=True)
+            output = process.communicate()
+            retcode = process.poll()
+
             # Create database checker_log.sqlite if it doesn't exist
             db = create_table.CreateTable('checker_log.sqlite')
             # Create job table if it doesn't exist
@@ -33,7 +40,7 @@ class Checker:
                     ' (datetime text, exit_code integer, value text)')
             # Insert values into table
             db.insert_values(basename(splitext(job)[0]),
-                             """('2013-04-15',0,'value')""")
+                             "('"+str(now)+"',"+str(retcode)+",'value')")
 
 if __name__ == '__main__':
     # Add CLI parsing.
