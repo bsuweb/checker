@@ -5,7 +5,8 @@ import datetime
 import sys
 import subprocess
 import argparse
-import create_table
+import data
+import contact
 
 
 class Checker:
@@ -26,21 +27,26 @@ class Checker:
 
     def run(self):
         for job in self.jobs:
+            current = basename(splitext(job)[0])
             now = datetime.datetime.now()
             process = subprocess.Popen(job, stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT,
                                        universal_newlines=True)
-            output = process.communicate()
-            retcode = process.poll()
+            out = process.communicate()
+            ret = process.poll()
 
             # Create database checker_log.sqlite if it doesn't exist
-            db = create_table.CreateTable('checker_log.sqlite')
+            db = data.Data('checker_log.sqlite')
             # Create job table if it doesn't exist
-            db.make(basename(splitext(job)[0]),
-                    ' (datetime text, exit_code integer, value text)')
+            db.make(current, ' (datetime text, exit_code integer, value text)')
             # Insert values into table
-            db.insert_values(basename(splitext(job)[0]),
-                             "('"+str(now)+"',"+str(retcode)+",'"+output[0]+"')")
+            db.insert_values(current,
+                             "('"+str(now)+"',"+str(ret)+",'"+out[0]+"')")
+            if ret == 1:
+                # Something went wrong with the current job. Send email.
+                message = "There is something wrong with " + current
+                emails = db.query('users', 'jobs', current)
+                # mail = contact.Email(EMAILLIST, message, SUBJECT)
 
 if __name__ == '__main__':
     # Add CLI parsing.
