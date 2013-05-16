@@ -6,6 +6,7 @@ import sys
 import subprocess
 import argparse
 import data
+import json
 import contact
 
 
@@ -37,11 +38,18 @@ class Checker:
 
             # Create database checker_log.sqlite if it doesn't exist
             db = data.Data('checker_log.sqlite')
-            # Create job table if it doesn't exist
             db.make(current, ' (datetime text, exit_code integer, value text)')
-            # Insert values into table
-            db.insert_values(current,
-                             "('"+str(now)+"',"+str(ret)+",'"+out[0]+"')")
+
+            try:
+                out = json.loads(str(out[0]))
+            except ValueError:
+                out = out[0]
+            else:
+                out = out["value"]
+            finally:
+                db.insert_values(current,
+                                 "('"+str(now)+"',"+str(ret)+",'"+out+"')")
+
             if ret == 1:
                 # Something went wrong with the current job. Send email.
                 message = "There is something wrong with " + current
@@ -49,7 +57,6 @@ class Checker:
                 # mail = contact.Email(EMAILLIST, message, SUBJECT)
 
 if __name__ == '__main__':
-    # Add CLI parsing.
     parser = argparse.ArgumentParser(
         description="A script that runs all the jobs in the given directory"
                     " and keeps track of responses in an sqlite database.")
