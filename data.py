@@ -15,13 +15,23 @@ class Data:
         sql = 'CREATE TABLE if not exists ' + table + values
         self.commit(sql)
 
+# Dont Need
+# Replace with one function that takes string of sql and runs it
     def insert_values(self, table, values):
         sql = 'INSERT INTO ' + table + ' VALUES ' + values
         self.commit(sql)
 
-    def query(self, table, column, value):
+    def update(self, sql):
+        self.commit(sql)
+
+    def query(self, sql):
+        self.c.execute(sql)
+        return self.c.fetchall()
+
+    def query_like(self, table, column, value):
         self.c.execute('SELECT * FROM ' + table + ' WHERE ' + column + ' like ?', ['%'+value+'%'])
         return self.c.fetchall()
+# Dont Need
 
     def __del__(self):
         self.c.close()

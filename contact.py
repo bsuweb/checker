@@ -3,10 +3,10 @@ from email.mime.text import MIMEText
 
 
 class Email:
-    def __init__(self, emails, message, subject):
+    def __init__(self, emails, message):
         self.emails = emails
         self.message = message
-        self.subject = subject
+        self.subject = "Subject"
         self.sender = 'bsuchecker@...'
 
     def send(self):
