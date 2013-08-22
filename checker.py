@@ -27,6 +27,21 @@ class Checker:
                     files.append(filename_path)
         return files
 
+    def job_in_checks(self, db, cur_fails, email):
+        max_fails = db.query(
+            "SELECT fails FROM users WHERE email =" + "'" + email + "'")[0][0]
+        cur_notify = db.query(
+            "SELECT cur_notify FROM users WHERE email =" + "'" + email + "'")[0][0]
+        max_notify = db.query(
+            "SELECT notify FROM users WHERE email =" + "'" + email + "'")[0][0]
+        if cur_fails >= max_fails and cur_notify <= max_notify:
+            # Send Message
+            # mail = contact.Email(email, message)
+            # mail.send()
+            # Update number of notifications user has been sent
+            db.update(
+                'UPDATE users SET cur_notify = cur_notify + 1 WHERE email =' + '"' + email + '"')
+
     def fail(self, job, current, ret, now, db, out):
         # value is information to be saved in the database.
         # message is the information to be sent in the email.
@@ -48,19 +63,7 @@ class Checker:
             jobs = user[1]
             for x in glob.glob(jobs):
                 if job in abspath(join(getcwd(), x)):
-                    max_fails = db.query(
-                        "SELECT fails FROM users WHERE email =" + "'" + email + "'")[0][0]
-                    cur_notify = db.query(
-                        "SELECT cur_notify FROM users WHERE email =" + "'" + email + "'")[0][0]
-                    max_notify = db.query(
-                        "SELECT notify FROM users WHERE email =" + "'" + email + "'")[0][0]
-                    if cur_fails >= max_fails and cur_notify <= max_notify:
-                        # Send Message
-                        # mail = contact.Email(email, message)
-                        # mail.send()
-                        # Update number of notifications user has been sent
-                        db.update(
-                            'UPDATE users SET cur_notify = cur_notify + 1 WHERE email =' + '"' + email + '"')
+                    Checker.job_in_checks(self, db, cur_fails,email)
 
     def run(self):
         for job in self.jobs:
