@@ -38,7 +38,7 @@ class Checker:
 
             # Create database checker_log.sqlite if it doesn't exist
             db = data.Data('checker_log.sqlite')
-            db.make(current, ' (datetime text, exit_code integer, value text)')
+            db.make(current, ' (datetime TEXT, exit_code INTEGER, value TEXT, fails INTEGER)')
             out = out[0].splitlines()
             if ret > 0:
                 # Something went wrong with the current job.
@@ -46,46 +46,41 @@ class Checker:
                 # message is the information to be sent in the email.
                 value = out[0]
                 message = out[1]
-                db.insert_values(current,
-                                 "('"+str(now)+"',"+str(ret)+",'"+value+"')")
+                # Get the number of fails for the current job, and increment
+                try:
+                    cur_fails = db.query("SELECT fails FROM "+current)[-1][0] + 1
+                    print cur_fails
+                except IndexError:
+                    cur_fails = 1
+                    print "INDEX ERROR : " + str(cur_fails)
+                # Add new entry to the current job table containing the time,
+                # exit code, value, and current number of fails. 
+                db.insert_values(current, "('"+str(now)+"',"+str(ret)+",'"+value+"',"+str(cur_fails)+")")
                 # Check to see if anyone needs to be notified of the failure.
                 users = db.query("SELECT email, checks FROM users")
-                # For each pair of email/checks in the users table
-                for jobs in users:
-                    #jobs[0] => emails
-                    #jobs[1] => checks
-                    checks = jobs[1].split(',')
-                    # For each job listed in the checks column
-                    for i in checks:
-                        test = glob.glob(i)
-                        # Get the full path of each check, and compare it to
-                        # the full path of the current job
-                        for x in test:
-                            temp = abspath(join(getcwd(), x))
-                            # If they match
-                            if job in temp:
-                                print 'yes'
-                                # Update current number of fails
-                                db.update('UPDATE users SET cur_fails = cur_fails + 1 WHERE email = '+'"'+jobs[0]+'"')
-                                # See if the number of current fails has broken the fails threshold
-                                cur_fails = db.query("SELECT cur_fails FROM users")
-                                fails = db.query("SELECT fails FROM users")
-                                if cur_fails == fails:
-                                    # Check if message threshold has been broken
-                                    cur_notif = db.query("SELECT cur_notify FROM users")
-                                    notif = db.query("SELECT notify FROM users")
-                                    if cur_notif < notif:
-                                        # Send message
-                                        mail = contact.Email(jobs[0], message)
-                                        print "EMAIL SENT"
-                                        # mail.send()
-                                        db.update('UPDATE users SET cur_notify = cur_notify + 1 WHERE email ='+'"'+jobs[0]+'"')
-                            else:
-                                print 'no'
+                for user in users:
+                    email = user[0]
+                    jobs = user[1]
+                    for x in glob.glob(jobs):
+                        if job in abspath(join(getcwd(), x)):
+                            max_fails = db.query("SELECT fails FROM users WHERE email ="+"'"+email+"'")[0][0]
+                            cur_notify = db.query("SELECT cur_notify FROM users WHERE email ="+"'"+email+"'")[0][0]
+                            max_notify = db.query("SELECT notify FROM users WHERE email ="+"'"+email+"'")[0][0]
+                            print "MAXFAILS: "+str(max_fails)
+                            print "CURNOT: "+str(cur_notify)
+                            print "MAXNOT: "+str(max_notify)
+                            if cur_fails >= max_fails and cur_notify <= max_notify:
+                                # Send Message
+                                # mail = contact.Email(email, message)
+                                # mail.send()
+                                print "Current Fails: " + str(cur_fails) + " Max Fails: " + str(max_fails)
+                                # Update number of notifications user has been sent
+                                db.update('UPDATE users SET cur_notify = cur_notify + 1 WHERE email ='+'"'+email+'"')
+                                print "Current Notifications: " + str(cur_notify) + " Max Notifications: " + str(max_notify)
             # Job ran successfully.
             else:
-                db.insert_values(current,
-                                 "('"+str(now)+"',"+str(ret)+",'"+out[0]+"')")
+                print "No Errors"
+                db.insert_values(current, "('"+str(now)+"',"+str(ret)+",'"+out[0]+"',"+str(0)+")")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
