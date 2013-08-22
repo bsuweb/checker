@@ -15,7 +15,7 @@ class Data:
         sql = 'CREATE TABLE if not exists ' + table + values
         self.commit(sql)
 
-    def insert_values(self, table, values):
+    def insert(self, table, values):
         sql = 'INSERT INTO ' + table + ' VALUES ' + values
         self.commit(sql)
 
