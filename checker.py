@@ -27,11 +27,12 @@ class Checker:
                     files.append(filename_path)
         return files
 
-    def job_in_checks(self, db, cur_fails, email):
+    def notify(self, db, cur_fails, email):
         max_fails = db.query(
             "SELECT fails FROM users WHERE email =" + "'" + email + "'")[0][0]
         cur_notify = db.query(
-            "SELECT cur_notify FROM users WHERE email =" + "'" + email + "'")[0][0]
+            "SELECT cur_notify FROM users WHERE email =" + "'" + email
+            + "'")[0][0]
         max_notify = db.query(
             "SELECT notify FROM users WHERE email =" + "'" + email + "'")[0][0]
         if cur_fails >= max_fails and cur_notify <= max_notify:
@@ -40,7 +41,8 @@ class Checker:
             # mail.send()
             # Update number of notifications user has been sent
             db.update(
-                'UPDATE users SET cur_notify = cur_notify + 1 WHERE email =' + '"' + email + '"')
+                'UPDATE users SET cur_notify = cur_notify + 1 WHERE email ='
+                + '"' + email + '"')
 
     def fail(self, job, current, ret, now, db, out):
         # value is information to be saved in the database.
@@ -55,7 +57,8 @@ class Checker:
         # Add new entry to the current job table containing the time,
         # exit code, value, and current number of fails.
         db.insert(
-            current, "('" + str(now) + "'," + str(ret) + ",'" + value + "'," + str(cur_fails) + ")")
+            current, "('" + str(now) + "'," + str(ret) + ",'" + value + "',"
+            + str(cur_fails) + ")")
         # Check to see if anyone needs to be notified of the failure.
         users = db.query("SELECT email, checks FROM users")
         for user in users:
@@ -63,7 +66,7 @@ class Checker:
             jobs = user[1]
             for x in glob.glob(jobs):
                 if job in abspath(join(getcwd(), x)):
-                    Checker.job_in_checks(self, db, cur_fails,email)
+                    Checker.notify(self, db, cur_fails, email)
 
     def run(self):
         for job in self.jobs:
@@ -78,7 +81,8 @@ class Checker:
             # Create database checker_log.sqlite if it doesn't exist
             db = data.Data('checker_log.sqlite')
             db.make(
-                current, ' (datetime TEXT, exit_code INTEGER, value TEXT, fails INTEGER)')
+                current, ' (datetime TEXT, exit_code INTEGER, value TEXT,'
+                ' fails INTEGER)')
             out = out[0].splitlines()
             if ret > 0:
                 print "Fail - " + job
@@ -88,7 +92,8 @@ class Checker:
                 # Job ran successfully.
                 print "No Fails"
                 db.insert(
-                    current, "('" + str(now) + "'," + str(ret) + ",'" + out[0] + "'," + str(0) + ")")
+                    current, "('" + str(now) + "'," + str(ret) + ",'" + out[0]
+                    + "'," + str(0) + ")")
                 # Reset value for cur_notify in the users table
 
 
@@ -97,7 +102,7 @@ if __name__ == '__main__':
         description="A script that runs all the jobs in the given directory"
                     " and keeps track of responses in an sqlite database.")
     parser.add_argument('path', metavar='jobs-directory', type=str, nargs=1,
-                        help='Path to the directory where executable jobs are.')
+                        help='Path to the directory where jobs are located.')
     args = parser.parse_args()
 
     # Initialize and run the checker.
