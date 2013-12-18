@@ -1,2 +1,0 @@
-asdf@example.com
-asdf@example.com test.py
